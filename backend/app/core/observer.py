@@ -2,6 +2,7 @@ import asyncio
 from sqlalchemy import func
 from app.database import SessionLocal, Log
 from app.core.websockets import manager
+from typing import cast
 
 class LogWatcher:
     def __init__(self):
@@ -51,7 +52,7 @@ class LogWatcher:
                     "source": log.source
                 }
                 await manager.broadcast({"type": "log", "data": entry})
-                self.last_log_id = log.id
+                self.last_log_id = cast(int, log.id)
         except Exception as e:
             print(f"Observer error: {e}")
         finally:

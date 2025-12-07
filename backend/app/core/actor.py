@@ -4,6 +4,7 @@ import sys
 from datetime import datetime, timezone
 from app.core.websockets import manager
 from app.database import SessionLocal, Run, Log
+from typing import cast
 
 class AgentActor:
     def __init__(self):
@@ -58,8 +59,8 @@ class AgentActor:
             try:
                 run = db.query(Run).filter(Run.id == self.current_run_id).first()
                 if run:
-                    run.status = "cancelled"
-                    run.end_time = datetime.now(timezone.utc)
+                    run.status = cast(str, "cancelled")
+                    run.end_time = cast(datetime, datetime.now(timezone.utc))
                     db.commit()
                     
                     # Log cancellation
@@ -92,9 +93,9 @@ class AgentActor:
         try:
             run = db.query(Run).filter(Run.id == self.current_run_id).first()
             if run:
-                run.status = "completed" if exit_code == 0 else "failed"
-                run.end_time = datetime.now(timezone.utc)
-                run.exit_code = exit_code
+                run.status = cast(str, "completed" if exit_code == 0 else "failed")
+                run.end_time = cast(datetime, datetime.now(timezone.utc))
+                run.exit_code = cast(int, exit_code)
                 db.commit()
         finally:
             db.close()
