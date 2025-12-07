@@ -1,0 +1,22 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.DS_Store
+
+# App
+*.db
+*.log
+logs/
+server_e2e.log
+backend/autoreflex.db
+
+# IDE
+.idea/
+.vscode/
