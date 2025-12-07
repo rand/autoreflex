@@ -12,3 +12,4 @@ httpx>=0.27.0
 websockets>=12.0
 # dspy-ai>=2.1.0 # Temporarily removed to avoid grpcio build issues in this env. Optimizer is mocked.
 pydantic-settings>=2.0.0
+mypy>=1.0.0

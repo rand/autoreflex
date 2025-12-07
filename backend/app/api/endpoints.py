@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, cast
 
 from app.models.schemas import TaskRequest, OptimizedPrompt, LogEntry, RunRequest
 from app.core.optimizer import optimizer
@@ -61,7 +61,7 @@ async def optimize_task(task: TaskRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # Hack: Attach ID for the frontend to use in run
-    optimized.id = db_task.id 
+    optimized.id = cast(int, db_task.id) 
     return optimized
 
 @router.post("/run")
@@ -76,7 +76,7 @@ async def run_agent(request: RunRequest, background_tasks: BackgroundTasks, db: 
         raise HTTPException(status_code=404, detail="Optimization not found for this task. Please optimize first.")
     
     try:
-        await actor.start_task(optimization.optimized_prompt, task_id)
+        await actor.start_task(cast(str, optimization.optimized_prompt), task_id)
         return {"status": "started", "message": "Agent loop initiated.", "task_id": task_id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

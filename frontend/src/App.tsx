@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Terminal, Play, StopCircle, Activity, LayoutDashboard, History, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Button } from './components/ui/button';
@@ -9,125 +9,29 @@ import { format } from 'date-fns';
 import { OnboardingWizard } from './components/Onboarding';
 import { HelpContext } from './components/HelpContext';
 
-const API_BASE = 'http://localhost:8000/api';
-const WS_URL = 'ws://localhost:8000/api/ws';
+// Import hooks and types
+import { useAppStatus } from './hooks/useAppStatus';
+import { useLogs } from './hooks/useLogs';
+import { useHistory } from './hooks/useHistory';
+import { useTaskManager } from './hooks/useTaskManager';
 
-// Types
-interface LogEntry {
-  timestamp: string;
-  level: string;
-  message: string;
-  source: string;
-}
-
-interface OptimizedPrompt {
-  id?: number;
-  original_task: string;
-  optimized_prompt: string;
-  reasoning: string;
-  estimated_tokens: number;
-}
-
-interface TaskHistory {
-    id: number;
-    description: string;
-    status: string;
-    created_at: string;
-}
 
 function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history'>('dashboard');
-  const [task, setTask] = useState('');
-  const [optimizedData, setOptimizedData] = useState<OptimizedPrompt | null>(null);
-  const [status, setStatus] = useState('idle');
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<TaskHistory[]>([]);
-  const logsEndRef = useRef<HTMLDivElement>(null);
-
-  // WebSocket for Real-time Logs
-  useEffect(() => {
-    const ws = new WebSocket(WS_URL);
-
-    ws.onmessage = (event) => {
-      const payload = JSON.parse(event.data);
-      if (payload.type === 'log') {
-        setLogs((prev) => [...prev, payload.data].slice(-500)); // Keep last 500
-      } else if (payload.type === 'status') {
-        setStatus(payload.data);
-      }
-    };
-
-    return () => ws.close();
-  }, []);
-
-  // Auto-scroll logs
-  useEffect(() => {
-    if (logsEndRef.current) {
-        logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [logs]);
-
-  // Initial Data Fetch
-  useEffect(() => {
-    fetchStatus();
-    fetchHistory();
-  }, []);
-
-  const fetchStatus = async () => {
-    try {
-        const res = await fetch(`${API_BASE}/status`);
-        const data = await res.json();
-        setStatus(data.status);
-    } catch (e) { console.error(e) }
-  };
-
-  const fetchHistory = async () => {
-      try {
-          const res = await fetch(`${API_BASE}/history`);
-          const data = await res.json();
-          setHistory(data);
-      } catch (e) { console.error(e) }
-  }
-
-  const optimizeTask = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/optimize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: task, context_files: [] }),
-      });
-      const data = await res.json();
-      setOptimizedData(data);
-      fetchHistory(); // Update history list
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-  };
-
-  const runAgent = async () => {
-    if (!optimizedData || !optimizedData.id) return;
-    try {
-      await fetch(`${API_BASE}/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task_id: optimizedData.id }),
-      });
-      // Status update comes via WS
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const stopAgent = async () => {
-    try {
-      await fetch(`${API_BASE}/stop`, { method: 'POST' });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  
+  // Use custom hooks
+  const { status, setStatus } = useAppStatus();
+  const { logs, logsEndRef } = useLogs(setStatus); // Pass setStatus to useLogs
+  const { history, refreshHistory } = useHistory();
+  const {
+    task,
+    setTask,
+    optimizedData,
+    loading,
+    optimizeTask,
+    runAgent,
+    stopAgent,
+  } = useTaskManager(refreshHistory);
 
   return (
     <div className="flex h-screen bg-gray-950 text-gray-50 font-sans overflow-hidden">

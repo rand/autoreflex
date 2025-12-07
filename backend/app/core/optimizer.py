@@ -1,5 +1,5 @@
 try:
-    import dspy
+    import dspy # type: ignore
 except ImportError:
     # Create a mock dspy module if it's not installed (to avoid build issues)
     from unittest.mock import MagicMock

@@ -1,0 +1,84 @@
+🚀 Starting Backend (Uvicorn) on http://0.0.0.0:8000...
+🚀 Starting Frontend (Vite)...
+INFO:     Will watch for changes in these directories: ['/Users/rand/src/autoreflex/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [88558] using StatReload
+
+> frontend@0.0.0 dev
+> vite
+
+
+  ROLLDOWN-VITE v7.2.5  ready in 139 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+INFO:     Started server process [88561]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+8:11:10 PM [vite] Internal server error: Failed to resolve import "./hooks/useHistory" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/rand/src/autoreflex/frontend/src/App.tsx:15:27
+  12 |  import { useAppStatus } from "./hooks/useAppStatus";
+  13 |  import { useLogs } from "./hooks/useLogs";
+  14 |  import { useHistory } from "./hooks/useHistory";
+     |                              ^
+  15 |  import { useTaskManager } from "./hooks/useTaskManager";
+  16 |  import { LogEntry, OptimizedPrompt, TaskHistory } from "./types";
+      at TransformPluginContext._formatLog (file:///Users/rand/src/autoreflex/frontend/node_modules/vite/dist/node/chunks/node.js:30679:43)
+      at TransformPluginContext.error (file:///Users/rand/src/autoreflex/frontend/node_modules/vite/dist/node/chunks/node.js:30676:14)
+      at normalizeUrl (file:///Users/rand/src/autoreflex/frontend/node_modules/vite/dist/node/chunks/node.js:28717:18)
+      at async file:///Users/rand/src/autoreflex/frontend/node_modules/vite/dist/node/chunks/node.js:28780:32
+      at async Promise.all (index 12)
+      at async TransformPluginContext.transform (file:///Users/rand/src/autoreflex/frontend/node_modules/vite/dist/node/chunks/node.js:28748:4)
+      at async EnvironmentPluginContainer.transform (file:///Users/rand/src/autoreflex/frontend/node_modules/vite/dist/node/chunks/node.js:30468:14)
+      at async loadAndTransform (file:///Users/rand/src/autoreflex/frontend/node_modules/vite/dist/node/chunks/node.js:21586:26)
+8:11:10 PM [vite] (client) Pre-transform error: Failed to resolve import "./hooks/useHistory" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/rand/src/autoreflex/frontend/src/App.tsx:15:27
+  12 |  import { useAppStatus } from "./hooks/useAppStatus";
+  13 |  import { useLogs } from "./hooks/useLogs";
+  14 |  import { useHistory } from "./hooks/useHistory";
+     |                              ^
+  15 |  import { useTaskManager } from "./hooks/useTaskManager";
+  16 |  import { LogEntry, OptimizedPrompt, TaskHistory } from "./types";
+8:11:10 PM [vite] (client) Pre-transform error: Failed to resolve import "./hooks/useHistory" from "src/App.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/rand/src/autoreflex/frontend/src/App.tsx:15:27
+  12 |  import { useAppStatus } from "./hooks/useAppStatus";
+  13 |  import { useLogs } from "./hooks/useLogs";
+  14 |  import { useHistory } from "./hooks/useHistory";
+     |                              ^
+  15 |  import { useTaskManager } from "./hooks/useTaskManager";
+  16 |  import { LogEntry, OptimizedPrompt, TaskHistory } from "./types";
+8:17:00 PM [vite] (client) page reload src/hooks/useHistory.ts
+8:19:24 PM [vite] (client) hmr update /src/App.tsx
+8:19:32 PM [vite] (client) hmr update /src/App.tsx
+8:19:38 PM [vite] (client) hmr update /src/App.tsx
+8:19:42 PM [vite] (client) hmr update /src/App.tsx
+8:19:48 PM [vite] (client) hmr update /src/App.tsx
+8:20:06 PM [vite] vite.config.ts changed, restarting server...
+8:20:07 PM [vite] server restarted.
+WARNING:  StatReload detected changes in 'app/database.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [88561]
+INFO:     Started server process [90040]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'app/api/endpoints.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [90040]
+INFO:     Started server process [90080]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'app/core/optimizer.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [90080]
+INFO:     Started server process [90111]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

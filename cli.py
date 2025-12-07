@@ -22,6 +22,7 @@ FRONTEND_DIR = os.path.join(os.getcwd(), "frontend")
 VENV_PYTHON = os.path.join(os.getcwd(), "venv", "bin", "python")
 VENV_UVICORN = os.path.join(os.getcwd(), "venv", "bin", "uvicorn")
 VENV_PYTEST = os.path.join(os.getcwd(), "venv", "bin", "pytest")
+VENV_MYPY = os.path.join(os.getcwd(), "venv", "bin", "mypy")
 
 def check_venv():
     if not os.path.exists(VENV_PYTHON):
@@ -88,24 +89,31 @@ def start(host, port):
 
 @cli.command()
 def test():
-    """Run all tests (Backend, Frontend, E2E)."""
+    """Run all tests (Backend, Frontend, E2E, Mypy)."""
     check_venv()
     
-    # 1. Backend Unit Tests
+    # 1. Backend Mypy Check
+    click.echo("🧪 Running Backend Mypy Check...")
+    ret = subprocess.call([VENV_MYPY, "app"], cwd=BACKEND_DIR)
+    if ret != 0:
+        click.echo("❌ Mypy check failed!")
+        sys.exit(ret)
+
+    # 2. Backend Unit Tests
     click.echo("🧪 Running Backend Unit Tests...")
     ret = subprocess.call([VENV_PYTEST, "tests"], cwd=BACKEND_DIR)
     if ret != 0:
         click.echo("❌ Backend tests failed!")
         sys.exit(ret)
 
-    # 2. Frontend Tests
+    # 3. Frontend Tests
     click.echo("🧪 Running Frontend Component Tests...")
     ret = subprocess.call(["npm", "test", "--", "--run"], cwd=FRONTEND_DIR)
     if ret != 0:
         click.echo("❌ Frontend tests failed!")
         sys.exit(ret)
 
-    # 3. E2E Tests
+    # 4. E2E Tests
     click.echo("🧪 Running End-to-End Verification...")
     # verify_e2e.py expects to run from root
     ret = subprocess.call([VENV_PYTHON, "verify_e2e.py"])

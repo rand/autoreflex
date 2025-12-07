@@ -9,3 +9,16 @@ addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+
+[tool.mypy]
+python_version = "3.14"
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+disallow_untyped_defs = true # Start strict
+ignore_missing_imports = true # Temporarily ignore for 3rd party libs
+check_untyped_defs = true # Ensure checks for untyped functions
+
+[[tool.mypy.overrides]]
+module = "dspy"
+ignore_errors = true
