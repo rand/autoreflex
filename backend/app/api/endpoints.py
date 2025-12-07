@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, WebSocket, WebSoc
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Generator
 
-from app.models.schemas import TaskRequest, OptimizedPrompt, LogEntry, RunRequest
+from app.models.schemas import TaskRequest, OptimizedPrompt, LogEntry, RunRequest, TaskResponse
 from app.core.optimizer import optimizer
 from app.core.actor import actor
 from app.core.observer import watcher
@@ -88,6 +88,6 @@ async def get_status() -> Dict[str, str]:
     return {"status": actor.status}
 
 @router.get("/history")
-async def get_history(db: Session = Depends(get_db)) -> List[Task]:
+async def get_history(db: Session = Depends(get_db)) -> List[TaskResponse]:
     tasks = db.query(Task).order_by(Task.created_at.desc()).limit(20).all()
-    return tasks
+    return [TaskResponse.model_validate(t) for t in tasks]

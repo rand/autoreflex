@@ -4,6 +4,7 @@ import sys
 from datetime import datetime, timezone
 from app.core.websockets import manager
 from app.database import SessionLocal, Run, Log
+from app.core.observer import watcher
 
 class AgentActor:
     def __init__(self) -> None:
@@ -113,6 +114,7 @@ class AgentActor:
             log = Log(run_id=self.current_run_id, message=message, level=level)
             db.add(log)
             db.commit()
+            watcher.notify()
         except Exception as e:
             print(f"Failed to write log to DB: {e}")
         finally:

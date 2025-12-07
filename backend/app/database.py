@@ -32,7 +32,7 @@ class Optimization(Base):
     __tablename__ = "optimizations"
 
     id = Column(Integer, primary_key=True, index=True)
-    task_id = Column(Integer, ForeignKey("tasks.id"))
+    task_id = Column(Integer, ForeignKey("tasks.id"), index=True)
     original_prompt = Column(Text)
     optimized_prompt = Column(Text)
     reasoning = Column(Text)
@@ -43,7 +43,7 @@ class Run(Base):
     __tablename__ = "runs"
 
     id = Column(Integer, primary_key=True, index=True)
-    task_id = Column(Integer, ForeignKey("tasks.id"))
+    task_id = Column(Integer, ForeignKey("tasks.id"), index=True)
     start_time = Column(DateTime, default=utc_now)
     end_time = Column(DateTime, nullable=True)
     status = Column(String, default="running")
@@ -56,7 +56,7 @@ class Log(Base):
     __tablename__ = "logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    run_id = Column(Integer, ForeignKey("runs.id"))
+    run_id = Column(Integer, ForeignKey("runs.id"), index=True)
     timestamp = Column(DateTime, default=utc_now)
     level = Column(String, default="INFO")
     message = Column(Text)

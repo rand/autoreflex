@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict
 from datetime import datetime
 
@@ -13,6 +13,8 @@ class OptimizedPrompt(BaseModel):
     optimized_prompt: str
     reasoning: str
     estimated_tokens: int
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class RunRequest(BaseModel):
     task_id: int = Field(..., description="The ID of the task to run")
@@ -22,3 +24,12 @@ class LogEntry(BaseModel):
     level: str
     message: str
     source: str = "claude-cli"
+
+class TaskResponse(BaseModel):
+    id: int
+    description: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

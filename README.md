@@ -12,76 +12,55 @@ AutoReflex is a local "Mission Control" for optimizing and automating your inter
 
 ## 🛠️ Architecture
 
-*   **Backend:** Python (FastAPI), SQLAlchemy (SQLite), Watchdog (File Monitoring).
-*   **Frontend:** React, TypeScript, Tailwind CSS, Shadcn/UI (simulated), WebSockets.
-*   **Infrastructure:** Docker Compose.
-
-## 🏁 Getting Started
-
-### Prerequisites
-
-*   Docker & Docker Compose
-*   (Optional) A local installation of `claude` CLI if you want to run the real agent (default is simulation mode).
-
-### Installation
-
-1.  Clone the repository.
-2.  Start the stack:
-
-```bash
-docker-compose up --build
-```
-
-3.  Open the dashboard: [http://localhost:5173](http://localhost:5173)
-4.  Open the API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-## 🔧 Configuration
-
-*   **Logs:** By default, the app looks for logs in `~/.claude`. You can mount this volume in `docker-compose.yml`.
-*   **Agent Execution:** Currently runs in "Simulation Mode" for safety. To enable real execution, edit `backend/app/core/actor.py`.
+*   **Backend:** Python (FastAPI), SQLAlchemy (SQLite), Alembic (Migrations).
+*   **Frontend:** React, TypeScript, Vite, Tailwind CSS, Custom Hooks architecture.
+*   **Core Pattern:** Actor-Observer-Optimizer.
+    *   **Optimizer:** Refines prompts using AI strategies.
+    *   **Actor:** Executes the agent in a subprocess, writing logs to the DB.
+    *   **Observer:** Event-driven monitor that streams DB logs to the Frontend via WebSockets.
 
 ## 💻 Development
 
-If you prefer to run locally without Docker:
+We provide a robust CLI tool to manage the development lifecycle.
 
-### Backend Setup
+### Prerequisites
+*   Python 3.14+
+*   Node.js & npm
 
-1.  Navigate to `backend/`.
-2.  Create a virtual environment: `python3.14 -m venv ../venv`
-3.  Activate it: `source ../venv/bin/activate`
-4.  Install dependencies: `pip install -r requirements.txt`
-5.  Run the server: `uvicorn app.main:app --reload`
+### Quick Start
 
-### Frontend Setup
-
-1.  Navigate to `frontend/`.
-2.  Install dependencies: `npm install`
-3.  Start the dev server: `npm run dev`
-
-## 🧪 Testing
-
-### Unit Tests
-
-*   **Backend:**
+1.  **Setup:** Install dependencies and initialize the environment.
     ```bash
-    # From project root (with venv activated)
-    pytest backend/tests
-    ```
-*   **Frontend:**
-    ```bash
-    # From frontend/ directory
-    npm test
+    ./venv/bin/python cli.py setup
     ```
 
-### End-to-End Verification
+2.  **Start:** Run the full stack (Backend + Frontend).
+    ```bash
+    ./venv/bin/python cli.py start
+    ```
+    Access the dashboard at [http://localhost:5173](http://localhost:5173).
 
-A utility script is provided to verify the backend API flow (Health -> Optimize -> Run -> Status).
+3.  **Test:** Run Backend Unit Tests, Frontend Component Tests, and End-to-End Verification.
+    ```bash
+    ./venv/bin/python cli.py test
+    ```
+
+### Database Migrations
+
+The project uses Alembic for database migrations.
 
 ```bash
-# From project root (with venv activated)
-python verify_e2e.py
+# Apply migrations
+cd backend && ../venv/bin/alembic upgrade head
+
+# Create a new migration (after model changes)
+cd backend && ../venv/bin/alembic revision --autogenerate -m "Description"
 ```
-This script handles starting and stopping the backend server automatically.
+
+## 🔧 Configuration
+
+*   **Logs:** Stored in `backend/autoreflex.db` (Log table).
+*   **Settings:** Managed via `backend/app/config.py`. Environment variables can be set in a `.env` file in `backend/`.
 
 ## 🤝 Credits
 

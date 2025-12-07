@@ -8,12 +8,14 @@ class LogWatcher:
         self.is_running = False
         self.last_log_id: int = 0
         self._task: asyncio.Task[None] | None = None
+        self._event: asyncio.Event | None = None
 
     async def start(self) -> None:
         if self.is_running:
             return
 
         self.is_running = True
+        self._event = asyncio.Event()
         
         # Initialize last_log_id to avoid replaying old logs on restart
         db = SessionLocal()
@@ -28,14 +30,29 @@ class LogWatcher:
 
     async def stop(self) -> None:
         self.is_running = False
+        if self._event:
+            self._event.set()
         if self._task:
             await self._task
             self._task = None
+        self._event = None
+
+    def notify(self) -> None:
+        """Notify the observer that new logs might be available."""
+        if self._event:
+            self._event.set()
 
     async def _poll_loop(self) -> None:
-        while self.is_running:
+        while self.is_running and self._event:
+            # Check logs immediately upon start or wake up
             await self._check_logs()
-            await asyncio.sleep(0.5)
+            
+            # Wait for notification
+            self._event.clear()
+            try:
+                await self._event.wait()
+            except asyncio.CancelledError:
+                break
 
     async def _check_logs(self) -> None:
         db = SessionLocal()
