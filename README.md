@@ -70,7 +70,7 @@ Currently, `backend/app/core/optimizer.py` uses a hardcoded template. To use AI 
 We provide a robust CLI tool `cli.py` to manage the development lifecycle without needing Docker.
 
 ### 1. Setup
-Install dependencies (Backend pip + Frontend npm) and checks your venv.
+Install dependencies (Backend pip + Frontend npm) and checks your venv. It automatically handles OpenSSL build flags for `grpcio` on macOS.
 ```bash
 ./venv/bin/python cli.py setup
 ```

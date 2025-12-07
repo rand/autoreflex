@@ -41,7 +41,35 @@ def setup():
     check_venv()
     
     click.echo("📦 Installing Backend Dependencies...")
-    subprocess.check_call([VENV_PYTHON, "-m", "pip", "install", "-r", os.path.join(BACKEND_DIR, "requirements.txt")])
+    # Upgrade build tools to minimize wheel building issues
+    subprocess.check_call([VENV_PYTHON, "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"])
+
+    # Set environment variables to help build grpcio on macOS if wheels are missing
+    env = os.environ.copy()
+    env["GRPC_PYTHON_BUILD_SYSTEM_OPENSSL"] = "1"
+    env["GRPC_PYTHON_BUILD_SYSTEM_ZLIB"] = "1"
+
+    # Add Homebrew paths for OpenSSL on macOS (for Apple Silicon and Intel)
+    if sys.platform == "darwin":
+        # Check for Homebrew OpenSSL
+        openssl_paths = [
+            "/opt/homebrew/opt/openssl@3",
+            "/opt/homebrew/opt/openssl",
+            "/usr/local/opt/openssl@3",
+            "/usr/local/opt/openssl"
+        ]
+        for openssl_dir in openssl_paths:
+            if os.path.exists(openssl_dir):
+                include_dir = os.path.join(openssl_dir, "include")
+                lib_dir = os.path.join(openssl_dir, "lib")
+                
+                # Append to existing flags or set new ones
+                env["CFLAGS"] = f"{env.get('CFLAGS', '')} -I{include_dir}"
+                env["CPPFLAGS"] = f"{env.get('CPPFLAGS', '')} -I{include_dir}"
+                env["LDFLAGS"] = f"{env.get('LDFLAGS', '')} -L{lib_dir}"
+                break
+
+    subprocess.check_call([VENV_PYTHON, "-m", "pip", "install", "-r", os.path.join(BACKEND_DIR, "requirements.txt")], env=env)
     
     click.echo("📦 Installing Frontend Dependencies...")
     subprocess.check_call(["npm", "install"], cwd=FRONTEND_DIR)
