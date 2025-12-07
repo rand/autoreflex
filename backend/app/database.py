@@ -1,16 +1,18 @@
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./autoreflex.db"
+from sqlalchemy.orm import sessionmaker, relationship, declarative_base
+from datetime import datetime, timezone
+from app.config import settings
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    settings.DATABASE_URL, 
+    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -18,8 +20,8 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     description = Column(Text, nullable=False)
     status = Column(String, default="pending")  # pending, optimizing, running, completed, failed
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
     
     # One-to-One
     optimization = relationship("Optimization", back_populates="task", uselist=False)
@@ -41,7 +43,7 @@ class Run(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     task_id = Column(Integer, ForeignKey("tasks.id"))
-    start_time = Column(DateTime, default=datetime.utcnow)
+    start_time = Column(DateTime, default=utc_now)
     end_time = Column(DateTime, nullable=True)
     status = Column(String, default="running")
     exit_code = Column(Integer, nullable=True)
@@ -54,7 +56,7 @@ class Log(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     run_id = Column(Integer, ForeignKey("runs.id"))
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=utc_now)
     level = Column(String, default="INFO")
     message = Column(Text)
     source = Column(String, default="system")

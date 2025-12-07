@@ -1,7 +1,7 @@
 import asyncio
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from app.core.websockets import manager
 from app.database import SessionLocal, Run, Log
 
@@ -59,7 +59,7 @@ class AgentActor:
                 run = db.query(Run).filter(Run.id == self.current_run_id).first()
                 if run:
                     run.status = "cancelled"
-                    run.end_time = datetime.utcnow()
+                    run.end_time = datetime.now(timezone.utc)
                     db.commit()
                     
                     # Log cancellation
@@ -93,7 +93,7 @@ class AgentActor:
             run = db.query(Run).filter(Run.id == self.current_run_id).first()
             if run:
                 run.status = "completed" if exit_code == 0 else "failed"
-                run.end_time = datetime.utcnow()
+                run.end_time = datetime.now(timezone.utc)
                 run.exit_code = exit_code
                 db.commit()
         finally:
