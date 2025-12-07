@@ -7,10 +7,7 @@ from app.core.optimizer import optimizer
 from app.core.actor import actor
 from app.core.observer import watcher
 from app.core.websockets import manager
-from app.database import SessionLocal, Task, Optimization, Run, engine, Base
-
-# Create tables
-Base.metadata.create_all(bind=engine)
+from app.database import SessionLocal, Task, Optimization, Run
 
 router = APIRouter()
 
