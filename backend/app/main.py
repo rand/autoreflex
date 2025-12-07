@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -25,7 +26,7 @@ app.add_middleware(
 
 # Global Exception Handler
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
@@ -35,9 +36,9 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(api_router, prefix="/api")
 
 @app.get("/")
-async def root():
+async def root() -> Dict[str, str]:
     return {"message": "AutoReflex OODA Engine Online", "status": "active"}
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, str]:
     return {"status": "healthy"}

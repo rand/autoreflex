@@ -4,15 +4,14 @@ import sys
 from datetime import datetime, timezone
 from app.core.websockets import manager
 from app.database import SessionLocal, Run, Log
-from typing import cast
 
 class AgentActor:
-    def __init__(self):
-        self.process = None
+    def __init__(self) -> None:
+        self.process: asyncio.subprocess.Process | None = None
         self.status = "idle"
-        self.current_run_id = None
+        self.current_run_id: int | None = None
 
-    async def start_task(self, prompt: str, task_id: int):
+    async def start_task(self, prompt: str, task_id: int) -> None:
         if self.status == "running":
             raise Exception("Agent is already running")
 
@@ -26,7 +25,7 @@ class AgentActor:
             db.add(run)
             db.commit()
             db.refresh(run)
-            self.current_run_id = run.id
+            self.current_run_id = run.id # type: ignore
         finally:
             db.close()
 
@@ -42,7 +41,7 @@ class AgentActor:
         
         asyncio.create_task(self._monitor_process())
 
-    async def stop_task(self):
+    async def stop_task(self) -> None:
         if self.process and self.process.returncode is None:
             self.process.terminate()
             try:
@@ -59,8 +58,8 @@ class AgentActor:
             try:
                 run = db.query(Run).filter(Run.id == self.current_run_id).first()
                 if run:
-                    run.status = cast(str, "cancelled")
-                    run.end_time = cast(datetime, datetime.now(timezone.utc))
+                    run.status = "cancelled" # type: ignore
+                    run.end_time = datetime.now(timezone.utc) # type: ignore
                     db.commit()
                     
                     # Log cancellation
@@ -70,13 +69,14 @@ class AgentActor:
             finally:
                 db.close()
 
-    async def _monitor_process(self):
+    async def _monitor_process(self) -> None:
         if not self.process:
             return
 
         # Read stdout line by line
         # We catch exceptions to ensure we don't crash the loop
         try:
+            assert self.process.stdout is not None
             async for line in self.process.stdout:
                 if line:
                     decoded_line = line.decode().strip()
@@ -93,9 +93,9 @@ class AgentActor:
         try:
             run = db.query(Run).filter(Run.id == self.current_run_id).first()
             if run:
-                run.status = cast(str, "completed" if exit_code == 0 else "failed")
-                run.end_time = cast(datetime, datetime.now(timezone.utc))
-                run.exit_code = cast(int, exit_code)
+                run.status = "completed" if exit_code == 0 else "failed" # type: ignore
+                run.end_time = datetime.now(timezone.utc) # type: ignore
+                run.exit_code = exit_code # type: ignore
                 db.commit()
         finally:
             db.close()
@@ -104,7 +104,7 @@ class AgentActor:
         await manager.broadcast({"type": "status", "data": "idle"})
         self.current_run_id = None
 
-    def _log_to_db(self, message: str, level: str = "INFO"):
+    def _log_to_db(self, message: str, level: str = "INFO") -> None:
         if not self.current_run_id:
             return
         

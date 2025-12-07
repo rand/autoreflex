@@ -2,7 +2,7 @@ import time
 import sys
 import argparse
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--prompt", help="The task prompt", default="Unknown Task")
     args = parser.parse_args()

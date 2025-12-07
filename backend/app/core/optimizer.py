@@ -11,7 +11,7 @@ from app.models.schemas import TaskRequest, OptimizedPrompt
 # In a real scenario, this would load a compiled DSPy module.
 
 class PromptOptimizer:
-    def __init__(self):
+    def __init__(self) -> None:
         # Configure DSPy (placeholder)
         # dspy.settings.configure(lm=dspy.OpenAI(model='gpt-3.5-turbo'))
         pass

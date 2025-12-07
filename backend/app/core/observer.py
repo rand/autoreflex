@@ -2,15 +2,14 @@ import asyncio
 from sqlalchemy import func
 from app.database import SessionLocal, Log
 from app.core.websockets import manager
-from typing import cast
 
 class LogWatcher:
-    def __init__(self):
+    def __init__(self) -> None:
         self.is_running = False
-        self.last_log_id = 0
-        self._task = None
+        self.last_log_id: int = 0
+        self._task: asyncio.Task[None] | None = None
 
-    async def start(self):
+    async def start(self) -> None:
         if self.is_running:
             return
 
@@ -27,18 +26,18 @@ class LogWatcher:
         print(f"Observer started. Watching for logs > {self.last_log_id}")
         self._task = asyncio.create_task(self._poll_loop())
 
-    async def stop(self):
+    async def stop(self) -> None:
         self.is_running = False
         if self._task:
             await self._task
             self._task = None
 
-    async def _poll_loop(self):
+    async def _poll_loop(self) -> None:
         while self.is_running:
             await self._check_logs()
             await asyncio.sleep(0.5)
 
-    async def _check_logs(self):
+    async def _check_logs(self) -> None:
         db = SessionLocal()
         try:
             # Fetch new logs
@@ -52,7 +51,7 @@ class LogWatcher:
                     "source": log.source
                 }
                 await manager.broadcast({"type": "log", "data": entry})
-                self.last_log_id = cast(int, log.id)
+                self.last_log_id = log.id # type: ignore
         except Exception as e:
             print(f"Observer error: {e}")
         finally:

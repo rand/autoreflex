@@ -12,7 +12,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base: Any = declarative_base()
 
-def utc_now():
+def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 class Task(Base):
