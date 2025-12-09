@@ -39,35 +39,28 @@ You now have a robust local dashboard to manage autonomous tasks.
 
 ## ⚡ Level Up: Making it "Real"
 
-The system currently runs in **Simulation Mode** (safe for testing). To turn this into a real power tool for coding with Claude, unlock these components:
+The system currently runs in **Simulation Mode** (safe for testing). To turn this into a real power tool for coding with Claude, use the following configuration options. You do **not** need to edit the code.
 
 ### A. Enable the Real Actor (Replace Simulator)
-Currently, `backend/app/core/actor.py` runs `simulator.py` which just prints fake logs. To run the actual Claude CLI:
+To run the actual Claude CLI (or any other command):
 
 1.  Ensure you have the Claude CLI installed: `npm install -g @anthropic-ai/claude-code`.
-2.  Edit `backend/app/core/actor.py`:
-    *   Find the `cmd` list construction in `start_task`.
-    *   Replace the simulator command with the real CLI command.
-    ```python
-    # OLD (Simulator)
-    # cmd = [sys.executable, "app/core/simulator.py", "--prompt", prompt]
-
-    # NEW (Real Agent) - Example
-    # Ensure 'claude' is in your PATH, or provide full path
-    cmd = ["claude", "--prompt", prompt, "--non-interactive"]
+2.  Set the `AUTOREFLEX_AGENT_CMD` environment variable in `backend/.env`:
+    ```bash
+    # Example: Run Claude in non-interactive mode
+    AUTOREFLEX_AGENT_CMD=["claude", "--non-interactive", "--prompt"]
     ```
+    *Note: The prompt text will be appended to this command.*
 
 ### B. Enable the Real Optimizer (Connect LLM)
-Currently, `backend/app/core/optimizer.py` uses a hardcoded template. To use AI to write better prompts:
+To use a real LLM (via DSPy) for prompt optimization instead of the mock template:
 
-1.  Uncomment `dspy` in `backend/requirements.txt` and reinstall (`./venv/bin/python cli.py setup`).
-2.  Edit `backend/app/core/optimizer.py` to configure a real Language Model (e.g., OpenAI `gpt-4o` or Anthropic `claude-3-opus`).
-
----
+1.  Set `USE_REAL_OPTIMIZER=True` in `backend/.env`.
+2.  Ensure you have the necessary API keys set (e.g., `OPENAI_API_KEY`) for DSPy to work.
 
 ## 💻 Developer Workflow
 
-We provide a robust CLI tool `cli.py` to manage the development lifecycle without needing Docker.
+We provide a robust CLI tool `cli.py` to manage the development lifecycle.
 
 ### 1. Setup
 Install dependencies (Backend pip + Frontend npm) and checks your venv. It automatically handles OpenSSL build flags for `grpcio` on macOS.
@@ -75,7 +68,24 @@ Install dependencies (Backend pip + Frontend npm) and checks your venv. It autom
 ./venv/bin/python cli.py setup
 ```
 
-### 2. Testing
+### 2. TUI (Terminal User Interface)
+Run the text-based dashboard to monitor tasks and logs directly in your terminal.
+```bash
+./venv/bin/python cli.py tui
+```
+
+### 3. Background Service (Daemon)
+Run AutoReflex as a background service (Systemd on Linux, Launchd on macOS).
+
+```bash
+# Generate and install service config
+./venv/bin/python cli.py service install
+
+# Check status
+./venv/bin/python cli.py service status
+```
+
+### 4. Testing
 Run the full suite. It checks types (mypy), logic (unit tests), and integration (E2E).
 ```bash
 ./venv/bin/python cli.py test

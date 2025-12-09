@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from app.core.websockets import manager
 from app.database import SessionLocal, Run, Log
 from app.core.observer import watcher
+from app.config import settings
 
 class AgentActor:
     def __init__(self) -> None:
@@ -31,8 +32,13 @@ class AgentActor:
             db.close()
 
         # Start Subprocess
-        # We use sys.executable to ensure we use the same python environment
-        cmd = [sys.executable, "app/core/simulator.py", "--prompt", prompt]
+        if settings.AUTOREFLEX_AGENT_CMD:
+            # Use real agent command from config
+            # Append the prompt to the configured command
+            cmd = settings.AUTOREFLEX_AGENT_CMD + [prompt]
+        else:
+            # Use default simulator
+            cmd = [sys.executable, "app/core/simulator.py", "--prompt", prompt]
         
         self.process = await asyncio.create_subprocess_exec(
             *cmd,

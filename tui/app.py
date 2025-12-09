@@ -12,33 +12,41 @@ from datetime import datetime
 from .api import AutoReflexAPI
 
 class LogWorker(Static):
-    """Hidden widget to manage the websocket connection."""
+    """Hidden widget to manage the websocket connection and stream updates."""
     
-    def __init__(self, log_widget: RichLog, base_url: str = "ws://localhost:8000/ws"):
+    def __init__(self, base_url: str = "ws://localhost:8000/ws"):
         super().__init__()
-        self.log_widget = log_widget
         self.base_url = base_url
         self.running = True
 
     @work(exclusive=True)
     async def run_websocket(self) -> None:
+        log_view = self.app.query_one("#log-view", RichLog)
+        status_label = self.app.query_one("#agent-status-value", Label)
+
         while self.running:
             try:
                 async with websockets.connect(self.base_url) as websocket:
-                    self.log_widget.write("[green]Connected to log stream...[/]")
+                    log_view.write("[green]Connected to log stream...[/]")
                     while self.running:
                         message = await websocket.recv()
                         data = json.loads(message)
+                        
                         # Format based on message type
                         if data.get("type") == "log":
                             content = data.get("content", "")
-                            self.log_widget.write(content)
+                            log_view.write(content)
                         elif data.get("type") == "status":
-                            # Could emit event to update status, for now just log
-                            status = data.get("data", "")
-                            self.log_widget.write(f"[blue][STATUS] {status}[/]")
+                            status = data.get("data", "unknown")
+                            log_view.write(f"[blue][STATUS] {status}[/]")
+                            
+                            # Update the dashboard status label as well
+                            is_running = status == "running"
+                            status_label.update(status.upper())
+                            status_label.styles.color = "green" if is_running else "yellow"
+
             except Exception as e:
-                self.log_widget.write(f"[red]Connection lost: {e}. Retrying in 3s...[/]")
+                log_view.write(f"[red]Connection lost: {e}. Retrying in 3s...[/]")
                 await asyncio.sleep(3)
 
     def on_mount(self) -> None:
@@ -103,55 +111,21 @@ class AutoReflexTUI(App):
                 yield Dashboard()
             with TabPane("Live Logs", id="tab-logs"):
                 yield RichLog(id="log-view", highlight=True, markup=True)
-                # Hidden worker to drive the logs
-                yield LogWorker(log_widget=None) # Will be set in on_mount
+        
+        # Worker is invisible but part of the tree to access app context
+        yield LogWorker()
         yield Footer()
-
-    def on_mount(self) -> None:
-        # Link the worker to the widget explicitly since we created them separately
-        log_view = self.query_one("#log-view", RichLog)
-        # Re-compose LogWorker properly or just pass it in?
-        # Actually, let's just find the worker widget we yielded and set the prop
-        # But wait, we can't easily find it by type if it's generic Static.
-        # Let's fix the composition.
-        pass
 
     async def on_mount(self) -> None:
         table = self.query_one("#tasks-table", DataTable)
         table.add_columns("ID", "Status", "Prompt", "Created At")
         
-        # Initialize LogWorker correctly
-        log_view = self.query_one("#log-view", RichLog)
-        # We need to remove the placeholder and add the real worker
-        # Or better: Just instantiate the worker with the log_view in compose?
-        # No, compose is called before nodes exist.
-        # Let's just start the worker manually here or use a dedicated method.
-        self.run_worker(self.start_log_stream(log_view))
-        
+        # Initial data fetch
         await self.action_refresh_data()
-
-    async def start_log_stream(self, log_widget: RichLog):
-        """Worker method to stream logs."""
-        url = "ws://localhost:8000/ws"
-        while True:
-            try:
-                async with websockets.connect(url) as websocket:
-                    log_widget.write("[green]Connected to log stream...[/]")
-                    while True:
-                        message = await websocket.recv()
-                        data = json.loads(message)
-                        if data.get("type") == "log":
-                            content = data.get("content", "")
-                            log_widget.write(content)
-                        elif data.get("type") == "status":
-                            # Update status bar if possible?
-                            pass
-            except Exception:
-                # log_widget.write(f"[red]Connection error: {e}[/]")
-                await asyncio.sleep(2)
 
     async def action_refresh_data(self) -> None:
         """Fetch latest data from API."""
+        # 1. Status
         status_data = self.api.get_status()
         status_str = status_data.get("status", "unknown")
         is_running = status_str == "running"
@@ -160,15 +134,19 @@ class AutoReflexTUI(App):
         status_label.update(status_str.upper())
         status_label.styles.color = "green" if is_running else "yellow"
 
+        # 2. History
         history = self.api.get_history()
         table = self.query_one("#tasks-table", DataTable)
         table.clear()
         
         for task in history:
-            # Safely handle missing keys if schema changes
             t_id = task.get("id", "N/A")
             t_status = task.get("status", "unknown")
-            t_prompt = task.get("prompt", "")[:50] + "..."
+            t_prompt = task.get("description", "")[:50] + "..." # Note: API uses 'description' usually, let's check schema
+            # Fallback if 'prompt' was used in some versions, but TaskRequest has 'description'
+            if not task.get("description") and task.get("prompt"):
+                 t_prompt = task.get("prompt", "")[:50] + "..."
+
             t_date = task.get("created_at", "")
             table.add_row(str(t_id), t_status, t_prompt, str(t_date))
 
