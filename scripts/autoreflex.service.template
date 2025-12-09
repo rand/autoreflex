@@ -1,0 +1,15 @@
+[Unit]
+Description=AutoReflex Daemon
+After=network.target
+
+[Service]
+Type=simple
+User={USER}
+WorkingDirectory={WORKING_DIR}
+ExecStart={PYTHON_PATH} -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+Environment="DATABASE_URL={DB_URL}"
+Environment="PYTHONUNBUFFERED=1"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

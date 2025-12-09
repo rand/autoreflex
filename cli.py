@@ -152,6 +152,103 @@ def test():
     click.echo("✅ All Tests Passed!")
 
 @cli.command()
+def tui():
+    """Start the Terminal User Interface (Textual)."""
+    check_venv()
+    click.echo("🖥️  Starting TUI...")
+    # Run tui as a module
+    subprocess.call([VENV_PYTHON, "-m", "tui.app"])
+
+@cli.group()
+def service():
+    """Manage background daemon services."""
+    pass
+
+@service.command()
+def install():
+    """Generate systemd (Linux) or launchd (macOS) service files."""
+    check_venv()
+    
+    user = os.getlogin()
+    working_dir = os.getcwd()
+    python_path = VENV_PYTHON
+    # Ensure DB path is absolute for the daemon
+    db_path = os.path.join(BACKEND_DIR, "autoreflex.db")
+    db_url = f"sqlite:///{db_path}"
+
+    replacements = {
+        "{USER}": user,
+        "{WORKING_DIR}": working_dir,
+        "{PYTHON_PATH}": python_path,
+        "{DB_URL}": db_url
+    }
+
+    if sys.platform == "darwin":
+        template_path = os.path.join(os.getcwd(), "scripts", "com.autoreflex.daemon.plist.template")
+        output_path = os.path.join(os.getcwd(), "scripts", "com.autoreflex.daemon.plist")
+        
+        if not os.path.exists(template_path):
+            click.echo("❌ Template not found: scripts/com.autoreflex.daemon.plist.template")
+            return
+
+        with open(template_path, "r") as f:
+            content = f.read()
+        
+        for k, v in replacements.items():
+            content = content.replace(k, v)
+            
+        with open(output_path, "w") as f:
+            f.write(content)
+            
+        click.echo(f"✅ Generated macOS Launch Agent: {output_path}")
+        click.echo("\nTo install:")
+        click.echo(f"  cp {output_path} ~/Library/LaunchAgents/")
+        click.echo("  launchctl load ~/Library/LaunchAgents/com.autoreflex.daemon.plist")
+        click.echo("  launchctl start com.autoreflex.daemon")
+
+    elif sys.platform == "linux":
+        template_path = os.path.join(os.getcwd(), "scripts", "autoreflex.service.template")
+        output_path = os.path.join(os.getcwd(), "scripts", "autoreflex.service")
+        
+        if not os.path.exists(template_path):
+            click.echo("❌ Template not found: scripts/autoreflex.service.template")
+            return
+
+        with open(template_path, "r") as f:
+            content = f.read()
+        
+        for k, v in replacements.items():
+            content = content.replace(k, v)
+            
+        with open(output_path, "w") as f:
+            f.write(content)
+            
+        click.echo(f"✅ Generated Systemd Service: {output_path}")
+        click.echo("\nTo install:")
+        click.echo(f"  sudo cp {output_path} /etc/systemd/system/")
+        click.echo("  sudo systemctl daemon-reload")
+        click.echo("  sudo systemctl enable autoreflex")
+        click.echo("  sudo systemctl start autoreflex")
+    
+    else:
+        click.echo(f"⚠️  Unsupported platform for automatic service generation: {sys.platform}")
+
+@service.command()
+def status():
+    """Check if the backend API is reachable."""
+    import urllib.request
+    try:
+        # Simple health check
+        with urllib.request.urlopen("http://localhost:8000/status", timeout=2) as response:
+            if response.status == 200:
+                click.echo("✅ Service is RUNNING")
+            else:
+                click.echo(f"⚠️  Service responded with code {response.status}")
+    except Exception as e:
+        click.echo("❌ Service is STOPPED or unreachable")
+        click.echo(f"   ({e})")
+
+@cli.command()
 def clean():
     """Remove build artifacts and temp files."""
     patterns = [
